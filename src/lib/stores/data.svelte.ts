@@ -58,17 +58,27 @@ class DataStore {
 
 	async init() {
 		if (this.initialized) return;
+		console.log('[DataStore] Starting init...');
 		const [w, c, p, pw] = await Promise.all([
 			supabase.from('workers').select('*'),
 			supabase.from('clients').select('*'),
 			supabase.from('projects').select('*'),
 			supabase.from('project_workers').select('*')
 		]);
+		console.log('[DataStore] workers:', w.error || w.data?.length + ' rows');
+		console.log('[DataStore] clients:', c.error || c.data?.length + ' rows');
+		console.log('[DataStore] projects:', p.error || p.data?.length + ' rows');
+		console.log('[DataStore] project_workers:', pw.error || pw.data?.length + ' rows');
+		if (w.error) throw new Error('Failed to load workers: ' + w.error.message);
+		if (c.error) throw new Error('Failed to load clients: ' + c.error.message);
+		if (p.error) throw new Error('Failed to load projects: ' + p.error.message);
+		if (pw.error) throw new Error('Failed to load project_workers: ' + pw.error.message);
 		this.workers = w.data ?? [];
 		this.clients = c.data ?? [];
 		this.projects = p.data ?? [];
 		this.projectWorkers = pw.data ?? [];
 		this.initialized = true;
+		console.log('[DataStore] Init complete');
 	}
 
 	// Workers
@@ -166,6 +176,10 @@ class DataStore {
 			const p = this.projects.find(p => p.id === pw.project_id);
 			return { ...pw, project_name: p?.name };
 		});
+	}
+	getUnassignedWorkers(projectId: number): Worker[] {
+		const assignedIds = new Set(this.projectWorkers.filter(pw => pw.project_id === projectId).map(pw => pw.worker_id));
+		return this.workers.filter(w => !assignedIds.has(w.id));
 	}
 	async assignWorker(data: Omit<ProjectWorker, 'id'>): Promise<ProjectWorker> {
 		const { data: rows, error } = await supabase.from('project_workers').insert(data).select().single();

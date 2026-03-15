@@ -62,10 +62,10 @@
         {:else}
           <div class="divide-y divide-slate-100">
             {#each projects as pw}
-              <div class="px-6 py-3">
+              <a href="/projects/{pw.project_id}" class="block px-6 py-3 hover:bg-slate-50 transition-colors">
                 <p class="font-medium text-slate-900">{pw.project_name}</p>
                 <p class="text-sm text-slate-500">{pw.role || 'No role'} · {pw.allocated_hours || 0}h · €{pw.hourly_rate || 0}/h</p>
-              </div>
+              </a>
             {/each}
           </div>
         {/if}

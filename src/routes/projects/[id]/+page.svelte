@@ -6,6 +6,13 @@
   const projectId = $derived(Number(page.params.id));
   const project = $derived(dataStore.getProjectById(projectId));
   const workers = $derived(dataStore.getWorkersByProject(projectId));
+  const unassigned = $derived(dataStore.getUnassignedWorkers(projectId));
+
+  let showAssignForm = $state(false);
+  let assignWorkerId = $state<number | null>(null);
+  let assignRole = $state('');
+  let assignHours = $state('');
+  let assignRate = $state('');
 
   const statusColors: Record<string, string> = {
     active: 'bg-emerald-100 text-emerald-700',
@@ -17,6 +24,30 @@
     if (confirm('Delete this project?')) {
       await dataStore.deleteProject(projectId);
       goto('/projects');
+    }
+  }
+
+  async function assignWorker() {
+    if (!assignWorkerId) return;
+    await dataStore.assignWorker({
+      project_id: projectId,
+      worker_id: assignWorkerId,
+      role: assignRole || null,
+      allocated_hours: assignHours ? Number(assignHours) : null,
+      hourly_rate: assignRate ? Number(assignRate) : null,
+      start_date: null,
+      end_date: null
+    });
+    showAssignForm = false;
+    assignWorkerId = null;
+    assignRole = '';
+    assignHours = '';
+    assignRate = '';
+  }
+
+  async function removeWorker(workerId: number) {
+    if (confirm('Remove this worker from the project?')) {
+      await dataStore.removeWorkerFromProject(projectId, workerId);
     }
   }
 </script>
@@ -53,16 +84,51 @@
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-        <div class="px-6 py-4 border-b border-slate-100">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h3 class="font-semibold text-slate-900">Team ({workers.length})</h3>
+          {#if unassigned.length > 0}
+            <button onclick={() => { showAssignForm = !showAssignForm; assignWorkerId = null; }} class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              {showAssignForm ? 'Cancel' : '+ Assign Worker'}
+            </button>
+          {/if}
         </div>
+
+        {#if showAssignForm}
+          <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Worker</label>
+              <select bind:value={assignWorkerId} class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value={null}>Select a worker...</option>
+                {#each unassigned as w}
+                  <option value={w.id}>{w.name}</option>
+                {/each}
+              </select>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-slate-500 mb-1">Role</label>
+                <input type="text" bind:value={assignRole} placeholder="e.g. Developer" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1">Hours</label>
+                <input type="number" bind:value={assignHours} placeholder="0" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-500 mb-1">€/hour</label>
+                <input type="number" step="0.01" bind:value={assignRate} placeholder="0" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+              </div>
+            </div>
+            <button onclick={assignWorker} disabled={!assignWorkerId} class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">Assign</button>
+          </div>
+        {/if}
+
         {#if workers.length === 0}
           <p class="p-6 text-slate-500 text-sm">No workers assigned yet.</p>
         {:else}
           <div class="divide-y divide-slate-100">
             {#each workers as pw}
               <div class="px-6 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-3">
+                <a href="/workers/{pw.worker_id}" class="flex items-center gap-3 hover:opacity-80">
                   <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-xs">
                     {pw.worker_name?.split(' ').map((n: string) => n[0]).join('')}
                   </div>
@@ -70,10 +136,13 @@
                     <p class="font-medium text-slate-900">{pw.worker_name}</p>
                     <p class="text-xs text-slate-500">{pw.role || 'No role'}</p>
                   </div>
-                </div>
-                <div class="text-right text-sm">
-                  <p class="font-medium text-slate-900">{pw.allocated_hours || 0}h</p>
-                  <p class="text-xs text-slate-500">€{pw.hourly_rate || 0}/h</p>
+                </a>
+                <div class="flex items-center gap-4">
+                  <div class="text-right text-sm">
+                    <p class="font-medium text-slate-900">{pw.allocated_hours || 0}h</p>
+                    <p class="text-xs text-slate-500">€{pw.hourly_rate || 0}/h</p>
+                  </div>
+                  <button onclick={() => removeWorker(pw.worker_id)} class="text-red-400 hover:text-red-600 text-xs" title="Remove">✕</button>
                 </div>
               </div>
             {/each}
