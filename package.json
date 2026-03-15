@@ -21,8 +21,10 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@supabase/supabase-js": "^2.99.1",
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@tailwindcss/vite": "^4.2.1",
+		"pg": "^8.20.0",
 		"tailwindcss": "^4.2.1"
 	}
 }

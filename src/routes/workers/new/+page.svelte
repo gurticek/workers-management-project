@@ -9,10 +9,10 @@
     { name: 'address', label: 'Address', type: 'text', required: false }
   ];
 
-  function handleSubmit(e: SubmitEvent) {
+  async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     const form = new FormData(e.target as HTMLFormElement);
-    const worker = dataStore.createWorker({
+    const worker = await dataStore.createWorker({
       name: form.get('name') as string,
       address: (form.get('address') as string) || null,
       phone: (form.get('phone') as string) || null,

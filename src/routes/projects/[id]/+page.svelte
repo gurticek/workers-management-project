@@ -13,9 +13,9 @@
     completed: 'bg-slate-100 text-slate-700'
   };
 
-  function deleteProject() {
+  async function deleteProject() {
     if (confirm('Delete this project?')) {
-      dataStore.deleteProject(projectId);
+      await dataStore.deleteProject(projectId);
       goto('/projects');
     }
   }

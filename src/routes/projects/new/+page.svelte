@@ -4,10 +4,10 @@
 
   const clients = $derived(dataStore.getAllClients());
 
-  function handleSubmit(e: SubmitEvent) {
+  async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     const form = new FormData(e.target as HTMLFormElement);
-    const project = dataStore.createProject({
+    const project = await dataStore.createProject({
       name: form.get('name') as string,
       description: (form.get('description') as string) || null,
       client_id: form.get('client_id') ? Number(form.get('client_id')) : null,

@@ -13,9 +13,9 @@
     completed: 'bg-slate-100 text-slate-700'
   };
 
-  function deleteClient() {
+  async function deleteClient() {
     if (confirm('Delete this client?')) {
-      dataStore.deleteClient(clientId);
+      await dataStore.deleteClient(clientId);
       goto('/clients');
     }
   }

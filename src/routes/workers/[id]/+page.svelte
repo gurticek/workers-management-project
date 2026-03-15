@@ -7,9 +7,9 @@
   const worker = $derived(dataStore.getWorkerById(workerId));
   const projects = $derived(dataStore.getProjectsByWorker(workerId));
 
-  function deleteWorker() {
+  async function deleteWorker() {
     if (confirm('Delete this worker?')) {
-      dataStore.deleteWorker(workerId);
+      await dataStore.deleteWorker(workerId);
       goto('/workers');
     }
   }

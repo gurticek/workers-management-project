@@ -14,8 +14,8 @@
 		{ href: '/clients', label: 'Clients', icon: '🏢' }
 	];
 
-	onMount(() => {
-		dataStore.init();
+	onMount(async () => {
+		await dataStore.init();
 		ready = true;
 	});
 </script>

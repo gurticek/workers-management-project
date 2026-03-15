@@ -11,10 +11,10 @@
     { name: 'company_size', label: 'Company Size', type: 'text', required: false }
   ];
 
-  function handleSubmit(e: SubmitEvent) {
+  async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     const form = new FormData(e.target as HTMLFormElement);
-    const client = dataStore.createClient({
+    const client = await dataStore.createClient({
       company_name: form.get('company_name') as string,
       contact_person: (form.get('contact_person') as string) || null,
       contact_email: (form.get('contact_email') as string) || null,

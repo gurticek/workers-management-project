@@ -1,4 +1,6 @@
-// Client-side data store using Svelte 5 runes + localStorage
+// Client-side data store using Svelte 5 runes + Supabase
+
+import { supabase } from '$lib/supabase';
 
 export interface Worker {
 	id: number;
@@ -47,44 +49,6 @@ export interface ProjectWorker {
 	hourly_rate: number | null;
 }
 
-const SEED_WORKERS: Worker[] = [
-	{ id: 1, name: 'Marek Novák', address: 'Obchodná 12, 811 06 Bratislava', phone: '+421 903 111 222', email: 'marek.novak@email.com', notes: 'Experienced assembly line worker. 5 years in automotive manufacturing.', photo_url: null, created_at: '2025-09-01T08:00:00' },
-	{ id: 2, name: 'Tomáš Kováč', address: 'Hlavná 45, 040 01 Košice', phone: '+421 907 333 444', email: 'tomas.kovac@email.com', notes: 'Specialized in robotic welding stations. Team lead.', photo_url: null, created_at: '2025-10-15T08:00:00' },
-	{ id: 3, name: 'Jakub Dvořák', address: 'Václavské nám. 8, 110 00 Prague', phone: '+420 602 555 666', email: 'jakub.dvorak@email.com', notes: 'Quality control specialist. Certified ISO 9001 auditor.', photo_url: null, created_at: '2025-11-01T08:00:00' }
-];
-
-const SEED_CLIENTS: Client[] = [
-	{ id: 1, company_name: 'BMW Manufacturing', contact_person: 'Hans Müller', contact_email: 'h.muller@bmw.de', contact_phone: '+49 89 382 0', address: 'Petuelring 130, 80788 München', company_size: '10000+', bio: 'BMW Group manufacturing division. Premium automobile production.', created_at: '2025-08-01T08:00:00' },
-	{ id: 2, company_name: 'Magna Steyr', contact_person: 'Franz Gruber', contact_email: 'f.gruber@magna.com', contact_phone: '+43 316 404 0', address: 'Liebenauer Hauptstr. 317, 8041 Graz', company_size: '1000-5000', bio: 'Contract manufacturer for complete vehicle assembly. Part of Magna International.', created_at: '2025-08-15T08:00:00' }
-];
-
-const SEED_PROJECTS: Project[] = [
-	{ id: 1, name: 'BMW i4 Assembly Line Extension', description: 'Extension of the i4 electric vehicle assembly line with new robotic welding and painting stations in Munich plant.', client_id: 1, start_date: '2026-01-15', end_date: '2026-08-30', value: 450000, currency: 'EUR', status: 'active', created_at: '2025-12-01T08:00:00' },
-	{ id: 2, name: 'Magna Steyr New Paint Line', description: 'Installation of a new environmentally-friendly paint line at Graz facility with water-based coating systems.', client_id: 2, start_date: '2026-04-01', end_date: '2026-10-31', value: 280000, currency: 'EUR', status: 'planned', created_at: '2026-01-10T08:00:00' }
-];
-
-const SEED_PROJECT_WORKERS: ProjectWorker[] = [
-	{ id: 1, project_id: 1, worker_id: 1, role: 'Assembly Line Technician', allocated_hours: 500, start_date: '2026-01-15', end_date: '2026-08-30', hourly_rate: 35 },
-	{ id: 2, project_id: 1, worker_id: 2, role: 'Welding Station Lead', allocated_hours: 450, start_date: '2026-02-01', end_date: '2026-08-30', hourly_rate: 42 },
-	{ id: 3, project_id: 1, worker_id: 3, role: 'Quality Inspector', allocated_hours: 200, start_date: '2026-03-01', end_date: '2026-08-30', hourly_rate: 38 },
-	{ id: 4, project_id: 2, worker_id: 1, role: 'Paint Line Installer', allocated_hours: 350, start_date: '2026-04-01', end_date: '2026-10-31', hourly_rate: 35 },
-	{ id: 5, project_id: 2, worker_id: 2, role: 'Technical Supervisor', allocated_hours: 300, start_date: '2026-04-01', end_date: '2026-10-31', hourly_rate: 42 }
-];
-
-function loadFromStorage<T>(key: string, seed: T[]): T[] {
-	if (typeof window === 'undefined') return seed;
-	try {
-		const stored = localStorage.getItem(key);
-		if (stored) return JSON.parse(stored);
-	} catch {}
-	localStorage.setItem(key, JSON.stringify(seed));
-	return [...seed];
-}
-
-function nextId<T extends { id: number }>(items: T[]): number {
-	return items.length === 0 ? 1 : Math.max(...items.map(i => i.id)) + 1;
-}
-
 class DataStore {
 	workers = $state<Worker[]>([]);
 	clients = $state<Client[]>([]);
@@ -92,68 +56,68 @@ class DataStore {
 	projectWorkers = $state<ProjectWorker[]>([]);
 	initialized = $state(false);
 
-	init() {
+	async init() {
 		if (this.initialized) return;
-		this.workers = loadFromStorage('wm_workers', SEED_WORKERS);
-		this.clients = loadFromStorage('wm_clients', SEED_CLIENTS);
-		this.projects = loadFromStorage('wm_projects', SEED_PROJECTS);
-		this.projectWorkers = loadFromStorage('wm_project_workers', SEED_PROJECT_WORKERS);
+		const [w, c, p, pw] = await Promise.all([
+			supabase.from('workers').select('*'),
+			supabase.from('clients').select('*'),
+			supabase.from('projects').select('*'),
+			supabase.from('project_workers').select('*')
+		]);
+		this.workers = w.data ?? [];
+		this.clients = c.data ?? [];
+		this.projects = p.data ?? [];
+		this.projectWorkers = pw.data ?? [];
 		this.initialized = true;
-	}
-
-	private save() {
-		if (typeof window === 'undefined') return;
-		localStorage.setItem('wm_workers', JSON.stringify(this.workers));
-		localStorage.setItem('wm_clients', JSON.stringify(this.clients));
-		localStorage.setItem('wm_projects', JSON.stringify(this.projects));
-		localStorage.setItem('wm_project_workers', JSON.stringify(this.projectWorkers));
 	}
 
 	// Workers
 	getAllWorkers(): Worker[] { return this.workers.sort((a, b) => a.name.localeCompare(b.name)); }
 	getWorkerById(id: number): Worker | undefined { return this.workers.find(w => w.id === id); }
-	createWorker(data: Omit<Worker, 'id' | 'created_at'>): Worker {
-		const w: Worker = { ...data, id: nextId(this.workers), created_at: new Date().toISOString() };
+	async createWorker(data: Omit<Worker, 'id' | 'created_at'>): Promise<Worker> {
+		const { data: rows, error } = await supabase.from('workers').insert(data).select().single();
+		if (error) throw error;
+		const w = rows as Worker;
 		this.workers.push(w);
-		this.save();
 		return w;
 	}
-	updateWorker(id: number, data: Partial<Worker>): Worker | undefined {
+	async updateWorker(id: number, data: Partial<Worker>): Promise<Worker | undefined> {
+		const { data: rows, error } = await supabase.from('workers').update(data).eq('id', id).select().single();
+		if (error) throw error;
 		const i = this.workers.findIndex(w => w.id === id);
-		if (i === -1) return undefined;
-		this.workers[i] = { ...this.workers[i], ...data };
-		this.save();
-		return this.workers[i];
+		if (i !== -1) this.workers[i] = rows as Worker;
+		return rows as Worker;
 	}
-	deleteWorker(id: number): boolean {
-		const len = this.workers.length;
+	async deleteWorker(id: number): Promise<boolean> {
+		const { error } = await supabase.from('workers').delete().eq('id', id);
+		if (error) throw error;
 		this.workers = this.workers.filter(w => w.id !== id);
 		this.projectWorkers = this.projectWorkers.filter(pw => pw.worker_id !== id);
-		this.save();
-		return this.workers.length < len;
+		return true;
 	}
 
 	// Clients
 	getAllClients(): Client[] { return this.clients.sort((a, b) => a.company_name.localeCompare(b.company_name)); }
 	getClientById(id: number): Client | undefined { return this.clients.find(c => c.id === id); }
-	createClient(data: Omit<Client, 'id' | 'created_at'>): Client {
-		const c: Client = { ...data, id: nextId(this.clients), created_at: new Date().toISOString() };
+	async createClient(data: Omit<Client, 'id' | 'created_at'>): Promise<Client> {
+		const { data: rows, error } = await supabase.from('clients').insert(data).select().single();
+		if (error) throw error;
+		const c = rows as Client;
 		this.clients.push(c);
-		this.save();
 		return c;
 	}
-	updateClient(id: number, data: Partial<Client>): Client | undefined {
+	async updateClient(id: number, data: Partial<Client>): Promise<Client | undefined> {
+		const { data: rows, error } = await supabase.from('clients').update(data).eq('id', id).select().single();
+		if (error) throw error;
 		const i = this.clients.findIndex(c => c.id === id);
-		if (i === -1) return undefined;
-		this.clients[i] = { ...this.clients[i], ...data };
-		this.save();
-		return this.clients[i];
+		if (i !== -1) this.clients[i] = rows as Client;
+		return rows as Client;
 	}
-	deleteClient(id: number): boolean {
-		const len = this.clients.length;
+	async deleteClient(id: number): Promise<boolean> {
+		const { error } = await supabase.from('clients').delete().eq('id', id);
+		if (error) throw error;
 		this.clients = this.clients.filter(c => c.id !== id);
-		this.save();
-		return this.clients.length < len;
+		return true;
 	}
 
 	// Projects
@@ -168,25 +132,26 @@ class DataStore {
 		if (!p) return undefined;
 		return { ...p, client_name: this.clients.find(c => c.id === p.client_id)?.company_name };
 	}
-	createProject(data: Omit<Project, 'id' | 'created_at'>): Project {
-		const p: Project = { ...data, id: nextId(this.projects), created_at: new Date().toISOString() };
+	async createProject(data: Omit<Project, 'id' | 'created_at'>): Promise<Project> {
+		const { data: rows, error } = await supabase.from('projects').insert(data).select().single();
+		if (error) throw error;
+		const p = rows as Project;
 		this.projects.push(p);
-		this.save();
 		return p;
 	}
-	updateProject(id: number, data: Partial<Project>): Project | undefined {
+	async updateProject(id: number, data: Partial<Project>): Promise<Project | undefined> {
+		const { data: rows, error } = await supabase.from('projects').update(data).eq('id', id).select().single();
+		if (error) throw error;
 		const i = this.projects.findIndex(p => p.id === id);
-		if (i === -1) return undefined;
-		this.projects[i] = { ...this.projects[i], ...data };
-		this.save();
-		return this.projects[i];
+		if (i !== -1) this.projects[i] = rows as Project;
+		return rows as Project;
 	}
-	deleteProject(id: number): boolean {
-		const len = this.projects.length;
+	async deleteProject(id: number): Promise<boolean> {
+		const { error } = await supabase.from('projects').delete().eq('id', id);
+		if (error) throw error;
 		this.projects = this.projects.filter(p => p.id !== id);
 		this.projectWorkers = this.projectWorkers.filter(pw => pw.project_id !== id);
-		this.save();
-		return this.projects.length < len;
+		return true;
 	}
 
 	// Project Workers
@@ -202,17 +167,18 @@ class DataStore {
 			return { ...pw, project_name: p?.name };
 		});
 	}
-	assignWorker(data: Omit<ProjectWorker, 'id'>): ProjectWorker {
-		const pw: ProjectWorker = { ...data, id: nextId(this.projectWorkers) };
+	async assignWorker(data: Omit<ProjectWorker, 'id'>): Promise<ProjectWorker> {
+		const { data: rows, error } = await supabase.from('project_workers').insert(data).select().single();
+		if (error) throw error;
+		const pw = rows as ProjectWorker;
 		this.projectWorkers.push(pw);
-		this.save();
 		return pw;
 	}
-	removeWorkerFromProject(projectId: number, workerId: number): boolean {
-		const len = this.projectWorkers.length;
+	async removeWorkerFromProject(projectId: number, workerId: number): Promise<boolean> {
+		const { error } = await supabase.from('project_workers').delete().eq('project_id', projectId).eq('worker_id', workerId);
+		if (error) throw error;
 		this.projectWorkers = this.projectWorkers.filter(pw => !(pw.project_id === projectId && pw.worker_id === workerId));
-		this.save();
-		return this.projectWorkers.length < len;
+		return true;
 	}
 }
 
