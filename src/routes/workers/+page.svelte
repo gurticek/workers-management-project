@@ -12,7 +12,14 @@
     <a href="/workers/new" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">+ Add Worker</a>
   </div>
 
-  {#if workers.length === 0}
+  {#if dataStore.error}
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
+      <p class="text-red-700 text-sm">{dataStore.error}</p>
+      <button onclick={() => dataStore.retry()} class="text-sm text-red-600 hover:text-red-800 underline font-medium">Retry</button>
+    </div>
+  {:else if dataStore.loading}
+    <div class="flex items-center justify-center py-12"><p class="text-slate-500">Loading workers...</p></div>
+  {:else if workers.length === 0}
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
       <p class="text-4xl mb-3">👷</p>
       <p class="text-slate-600 font-medium">No workers yet</p>

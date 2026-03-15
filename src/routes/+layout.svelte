@@ -5,8 +5,6 @@
 
 	let { children } = $props();
 	let mobileMenuOpen = $state(false);
-	let ready = $state(false);
-	let error = $state<string | null>(null);
 	
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: '📊' },
@@ -15,21 +13,8 @@
 		{ href: '/clients', label: 'Clients', icon: '🏢' }
 	];
 
-	onMount(async () => {
-		const timeout = setTimeout(() => {
-			if (!ready) {
-				error = 'Loading took too long (>5s). Check your network connection and Supabase configuration.';
-			}
-		}, 5000);
-		try {
-			await dataStore.init();
-			ready = true;
-		} catch (e: any) {
-			console.error('[Layout] Init failed:', e);
-			error = e?.message || String(e);
-		} finally {
-			clearTimeout(timeout);
-		}
+	onMount(() => {
+		dataStore.init();
 	});
 </script>
 
@@ -61,20 +46,7 @@
 		</header>
 		
 		<main class="flex-1 overflow-y-auto p-6">
-			{#if error}
-				<div class="flex items-center justify-center h-full">
-					<div class="text-center space-y-3">
-						<p class="text-red-500 font-medium">Failed to load: {error}</p>
-						<button onclick={() => location.reload()} class="text-sm text-blue-600 hover:text-blue-700 underline">Retry</button>
-					</div>
-				</div>
-			{:else if ready}
-				{@render children()}
-			{:else}
-				<div class="flex items-center justify-center h-full">
-					<p class="text-slate-500">Loading...</p>
-				</div>
-			{/if}
+			{@render children()}
 		</main>
 	</div>
 

@@ -55,30 +55,48 @@ class DataStore {
 	projects = $state<Project[]>([]);
 	projectWorkers = $state<ProjectWorker[]>([]);
 	initialized = $state(false);
+	loading = $state(true);
+	error = $state<string | null>(null);
 
 	async init() {
 		if (this.initialized) return;
-		console.log('[DataStore] Starting init...');
-		const [w, c, p, pw] = await Promise.all([
-			supabase.from('workers').select('*'),
-			supabase.from('clients').select('*'),
-			supabase.from('projects').select('*'),
-			supabase.from('project_workers').select('*')
-		]);
-		console.log('[DataStore] workers:', w.error || w.data?.length + ' rows');
-		console.log('[DataStore] clients:', c.error || c.data?.length + ' rows');
-		console.log('[DataStore] projects:', p.error || p.data?.length + ' rows');
-		console.log('[DataStore] project_workers:', pw.error || pw.data?.length + ' rows');
-		if (w.error) throw new Error('Failed to load workers: ' + w.error.message);
-		if (c.error) throw new Error('Failed to load clients: ' + c.error.message);
-		if (p.error) throw new Error('Failed to load projects: ' + p.error.message);
-		if (pw.error) throw new Error('Failed to load project_workers: ' + pw.error.message);
-		this.workers = w.data ?? [];
-		this.clients = c.data ?? [];
-		this.projects = p.data ?? [];
-		this.projectWorkers = pw.data ?? [];
-		this.initialized = true;
-		console.log('[DataStore] Init complete');
+		this.loading = true;
+		this.error = null;
+		try {
+			console.log('[DataStore] Starting init...');
+			const [w, c, p, pw] = await Promise.all([
+				supabase.from('workers').select('*'),
+				supabase.from('clients').select('*'),
+				supabase.from('projects').select('*'),
+				supabase.from('project_workers').select('*')
+			]);
+			const errors: string[] = [];
+			if (w.error) errors.push('workers: ' + w.error.message);
+			if (c.error) errors.push('clients: ' + c.error.message);
+			if (p.error) errors.push('projects: ' + p.error.message);
+			if (pw.error) errors.push('project_workers: ' + pw.error.message);
+			if (errors.length > 0) {
+				this.error = 'Failed to load: ' + errors.join('; ');
+				console.error('[DataStore]', this.error);
+			} else {
+				this.workers = w.data ?? [];
+				this.clients = c.data ?? [];
+				this.projects = p.data ?? [];
+				this.projectWorkers = pw.data ?? [];
+			}
+		} catch (e: any) {
+			this.error = e?.message || String(e);
+			console.error('[DataStore] Init error:', this.error);
+		} finally {
+			this.initialized = true;
+			this.loading = false;
+			console.log('[DataStore] Init complete');
+		}
+	}
+
+	async retry() {
+		this.initialized = false;
+		await this.init();
 	}
 
 	// Workers
