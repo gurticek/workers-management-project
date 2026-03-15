@@ -1,10 +1,27 @@
 <script lang="ts">
+  import { dataStore } from '$lib/stores/data.svelte';
+  import { goto } from '$app/navigation';
+
   const fields = [
     { name: 'name', label: 'Full Name', type: 'text', required: true },
     { name: 'email', label: 'Email', type: 'email', required: false },
     { name: 'phone', label: 'Phone', type: 'tel', required: false },
     { name: 'address', label: 'Address', type: 'text', required: false }
   ];
+
+  function handleSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const form = new FormData(e.target as HTMLFormElement);
+    const worker = dataStore.createWorker({
+      name: form.get('name') as string,
+      address: (form.get('address') as string) || null,
+      phone: (form.get('phone') as string) || null,
+      email: (form.get('email') as string) || null,
+      notes: (form.get('notes') as string) || null,
+      photo_url: null
+    });
+    goto(`/workers/${worker.id}`);
+  }
 </script>
 
 <div class="max-w-2xl space-y-6">
@@ -15,7 +32,7 @@
     <h2 class="text-2xl font-bold text-slate-900">Add Worker</h2>
   </div>
 
-  <form method="POST" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
+  <form onsubmit={handleSubmit} class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
     {#each fields as field}
       <div>
         <label for={field.name} class="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>

@@ -1,18 +1,19 @@
 <script lang="ts">
-  let { data } = $props();
+  import { dataStore } from '$lib/stores/data.svelte';
+  const clients = $derived(dataStore.getAllClients());
 </script>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-bold text-slate-900">Clients</h2>
-      <p class="text-slate-500 mt-1">{data.clients.length} clients</p>
+      <p class="text-slate-500 mt-1">{clients.length} clients</p>
     </div>
     <a href="/clients/new" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">+ Add Client</a>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {#each data.clients as client}
+    {#each clients as client}
       <a href="/clients/{client.id}" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow">
         <div class="flex items-start justify-between">
           <div>

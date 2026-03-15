@@ -23,8 +23,6 @@
 	"dependencies": {
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@tailwindcss/vite": "^4.2.1",
-		"@types/better-sqlite3": "^7.6.13",
-		"better-sqlite3": "^12.8.0",
 		"tailwindcss": "^4.2.1"
 	}
 }

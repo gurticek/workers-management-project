@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { dataStore } from '$lib/stores/data.svelte';
+  import { goto } from '$app/navigation';
+
   const fields = [
     { name: 'company_name', label: 'Company Name', type: 'text', required: true },
     { name: 'contact_person', label: 'Contact Person', type: 'text', required: false },
@@ -7,6 +10,21 @@
     { name: 'address', label: 'Address', type: 'text', required: false },
     { name: 'company_size', label: 'Company Size', type: 'text', required: false }
   ];
+
+  function handleSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const form = new FormData(e.target as HTMLFormElement);
+    const client = dataStore.createClient({
+      company_name: form.get('company_name') as string,
+      contact_person: (form.get('contact_person') as string) || null,
+      contact_email: (form.get('contact_email') as string) || null,
+      contact_phone: (form.get('contact_phone') as string) || null,
+      address: (form.get('address') as string) || null,
+      company_size: (form.get('company_size') as string) || null,
+      bio: (form.get('bio') as string) || null
+    });
+    goto(`/clients/${client.id}`);
+  }
 </script>
 
 <div class="max-w-2xl space-y-6">
@@ -17,7 +35,7 @@
     <h2 class="text-2xl font-bold text-slate-900">Add Client</h2>
   </div>
 
-  <form method="POST" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
+  <form onsubmit={handleSubmit} class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
     {#each fields as field}
       <div>
         <label for={field.name} class="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>

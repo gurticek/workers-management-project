@@ -1,7 +1,11 @@
 <script lang="ts">
 	import '../app.css';
+	import { dataStore } from '$lib/stores/data.svelte';
+	import { onMount } from 'svelte';
+
 	let { children } = $props();
 	let mobileMenuOpen = $state(false);
+	let ready = $state(false);
 	
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: '📊' },
@@ -9,6 +13,11 @@
 		{ href: '/projects', label: 'Projects', icon: '📁' },
 		{ href: '/clients', label: 'Clients', icon: '🏢' }
 	];
+
+	onMount(() => {
+		dataStore.init();
+		ready = true;
+	});
 </script>
 
 <div class="flex h-screen overflow-hidden bg-surface-alt">
@@ -39,7 +48,13 @@
 		</header>
 		
 		<main class="flex-1 overflow-y-auto p-6">
-			{@render children()}
+			{#if ready}
+				{@render children()}
+			{:else}
+				<div class="flex items-center justify-center h-full">
+					<p class="text-slate-500">Loading...</p>
+				</div>
+			{/if}
 		</main>
 	</div>
 

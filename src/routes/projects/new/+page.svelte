@@ -1,5 +1,24 @@
 <script lang="ts">
-  let { data } = $props();
+  import { dataStore } from '$lib/stores/data.svelte';
+  import { goto } from '$app/navigation';
+
+  const clients = $derived(dataStore.getAllClients());
+
+  function handleSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const form = new FormData(e.target as HTMLFormElement);
+    const project = dataStore.createProject({
+      name: form.get('name') as string,
+      description: (form.get('description') as string) || null,
+      client_id: form.get('client_id') ? Number(form.get('client_id')) : null,
+      start_date: (form.get('start_date') as string) || null,
+      end_date: (form.get('end_date') as string) || null,
+      value: form.get('value') ? Number(form.get('value')) : null,
+      currency: (form.get('currency') as string) || 'EUR',
+      status: (form.get('status') as 'planned' | 'active' | 'completed') || 'planned'
+    });
+    goto(`/projects/${project.id}`);
+  }
 </script>
 
 <div class="max-w-2xl space-y-6">
@@ -10,7 +29,7 @@
     <h2 class="text-2xl font-bold text-slate-900">New Project</h2>
   </div>
 
-  <form method="POST" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
+  <form onsubmit={handleSubmit} class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
     <div>
       <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
       <input id="name" name="name" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
@@ -24,7 +43,7 @@
         <label for="client_id" class="block text-sm font-medium text-slate-700 mb-1">Client</label>
         <select id="client_id" name="client_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           <option value="">No client</option>
-          {#each data.clients as client}
+          {#each clients as client}
             <option value={client.id}>{client.company_name}</option>
           {/each}
         </select>

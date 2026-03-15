@@ -1,5 +1,6 @@
 <script lang="ts">
-  let { data } = $props();
+  import { dataStore } from '$lib/stores/data.svelte';
+  const projects = $derived(dataStore.getAllProjects());
   const statusColors: Record<string, string> = {
     active: 'bg-emerald-100 text-emerald-700',
     planned: 'bg-blue-100 text-blue-700',
@@ -11,7 +12,7 @@
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-bold text-slate-900">Projects</h2>
-      <p class="text-slate-500 mt-1">{data.projects.length} projects</p>
+      <p class="text-slate-500 mt-1">{projects.length} projects</p>
     </div>
     <a href="/projects/new" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">+ New Project</a>
   </div>
@@ -28,7 +29,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          {#each data.projects as project}
+          {#each projects as project}
             <tr class="hover:bg-slate-50 transition-colors">
               <td class="px-5 py-3">
                 <a href="/projects/{project.id}" class="font-medium text-blue-600 hover:text-blue-700">{project.name}</a>
