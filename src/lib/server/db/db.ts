@@ -1,7 +1,9 @@
 import Database from 'better-sqlite3';
 import { resolve } from 'path';
+import { mkdirSync } from 'fs';
 
 const DB_PATH = resolve('data/app.db');
+mkdirSync(resolve('data'), { recursive: true });
 
 const db = new Database(DB_PATH);
 
