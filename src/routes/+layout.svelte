@@ -10,7 +10,8 @@
 		{ href: '/', label: 'Dashboard', icon: '📊' },
 		{ href: '/workers', label: 'Workers', icon: '👷' },
 		{ href: '/projects', label: 'Projects', icon: '📁' },
-		{ href: '/clients', label: 'Clients', icon: '🏢' }
+		{ href: '/clients', label: 'Clients', icon: '🏢' },
+		{ href: '/contracts/upload', label: 'Upload Contract', icon: '📄' }
 	];
 
 	onMount(() => {
