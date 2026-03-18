@@ -64,12 +64,14 @@ class DataStore {
 		this.error = null;
 		try {
 			console.log('[DataStore] Starting init...');
-			const [w, c, p, pw] = await Promise.all([
+			const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase connection timed out after 8s')), 8000));
+			const queries = Promise.all([
 				supabase.from('workers').select('*'),
 				supabase.from('clients').select('*'),
 				supabase.from('projects').select('*'),
 				supabase.from('project_workers').select('*')
 			]);
+			const [w, c, p, pw] = await Promise.race([queries, timeout]) as any;
 			const errors: string[] = [];
 			if (w.error) errors.push('workers: ' + w.error.message);
 			if (c.error) errors.push('clients: ' + c.error.message);
@@ -100,7 +102,7 @@ class DataStore {
 	}
 
 	// Workers
-	getAllWorkers(): Worker[] { return this.workers.sort((a, b) => a.name.localeCompare(b.name)); }
+	getAllWorkers(): Worker[] { return [...this.workers].sort((a, b) => a.name.localeCompare(b.name)); }
 	getWorkerById(id: number): Worker | undefined { return this.workers.find(w => w.id === id); }
 	async createWorker(data: Omit<Worker, 'id' | 'created_at'>): Promise<Worker> {
 		const { data: rows, error } = await supabase.from('workers').insert(data).select().single();
@@ -125,7 +127,7 @@ class DataStore {
 	}
 
 	// Clients
-	getAllClients(): Client[] { return this.clients.sort((a, b) => a.company_name.localeCompare(b.company_name)); }
+	getAllClients(): Client[] { return [...this.clients].sort((a, b) => a.company_name.localeCompare(b.company_name)); }
 	getClientById(id: number): Client | undefined { return this.clients.find(c => c.id === id); }
 	async createClient(data: Omit<Client, 'id' | 'created_at'>): Promise<Client> {
 		const { data: rows, error } = await supabase.from('clients').insert(data).select().single();

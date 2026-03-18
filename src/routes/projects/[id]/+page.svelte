@@ -5,6 +5,7 @@
 
   const projectId = $derived(Number(page.params.id));
   const project = $derived(dataStore.getProjectById(projectId));
+  const client = $derived(project?.client_id ? dataStore.getClientById(project.client_id) : undefined);
   const workers = $derived(dataStore.getWorkersByProject(projectId));
   const unassigned = $derived(dataStore.getUnassignedWorkers(projectId));
 
@@ -151,7 +152,17 @@
       </div>
     </div>
 
-    <div>
+    <div class="space-y-6">
+      {#if client}
+      <a href="/clients/{client.id}" class="block bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+        <h3 class="font-semibold text-slate-900 mb-3">🏢 Client</h3>
+        <p class="font-medium text-blue-600">{client.company_name}</p>
+        {#if client.contact_person}<p class="text-sm text-slate-500 mt-1">{client.contact_person}</p>{/if}
+        {#if client.contact_email}<p class="text-sm text-slate-500">{client.contact_email}</p>{/if}
+        {#if client.contact_phone}<p class="text-sm text-slate-500">{client.contact_phone}</p>{/if}
+      </a>
+      {/if}
+
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 class="font-semibold text-slate-900 mb-3">Summary</h3>
         <div class="space-y-3">
