@@ -7,6 +7,46 @@
   const worker = $derived(dataStore.getWorkerById(workerId));
   const projects = $derived(dataStore.getProjectsByWorker(workerId));
 
+  let editing = $state(false);
+  let saving = $state(false);
+  let editName = $state('');
+  let editPhone = $state('');
+  let editEmail = $state('');
+  let editAddress = $state('');
+  let editNotes = $state('');
+
+  function startEdit() {
+    if (!worker) return;
+    editName = worker.name;
+    editPhone = worker.phone || '';
+    editEmail = worker.email || '';
+    editAddress = worker.address || '';
+    editNotes = worker.notes || '';
+    editing = true;
+  }
+
+  function cancelEdit() {
+    editing = false;
+  }
+
+  async function saveEdit() {
+    saving = true;
+    try {
+      await dataStore.updateWorker(workerId, {
+        name: editName,
+        phone: editPhone || null,
+        email: editEmail || null,
+        address: editAddress || null,
+        notes: editNotes || null
+      });
+      editing = false;
+    } catch (err) {
+      console.error('Failed to update worker:', err);
+    } finally {
+      saving = false;
+    }
+  }
+
   async function deleteWorker() {
     if (confirm('Delete this worker?')) {
       await dataStore.deleteWorker(workerId);
@@ -26,30 +66,63 @@
         {worker.name.split(' ').map((n: string) => n[0]).join('')}
       </div>
       <div>
-        <h2 class="text-2xl font-bold text-slate-900">{worker.name}</h2>
+        {#if editing}
+          <input bind:value={editName} class="text-2xl font-bold text-slate-900 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {:else}
+          <h2 class="text-2xl font-bold text-slate-900">{worker.name}</h2>
+        {/if}
         <p class="text-slate-500">{worker.email || 'No email'}</p>
       </div>
     </div>
-    <button onclick={deleteWorker} class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+    <div class="flex items-center gap-3">
+      {#if editing}
+        <button onclick={saveEdit} disabled={saving} class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? 'Saving...' : 'Save'}</button>
+        <button onclick={cancelEdit} class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+      {:else}
+        <button onclick={startEdit} class="text-blue-600 hover:text-blue-700 text-sm font-medium">Edit</button>
+        <button onclick={deleteWorker} class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+      {/if}
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 class="font-semibold text-slate-900 mb-4">Contact Information</h3>
-        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {#each [['Phone', worker.phone], ['Email', worker.email], ['Address', worker.address]] as [label, value]}
+        {#if editing}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <dt class="text-sm text-slate-500">{label}</dt>
-              <dd class="font-medium text-slate-900 mt-0.5">{value || '—'}</dd>
+              <label class="text-sm text-slate-500">Phone</label>
+              <input bind:value={editPhone} type="tel" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
-          {/each}
-        </dl>
-        {#if worker.notes}
-          <div class="mt-4 pt-4 border-t border-slate-100">
-            <dt class="text-sm text-slate-500">Notes</dt>
-            <dd class="text-slate-700 mt-1">{worker.notes}</dd>
+            <div>
+              <label class="text-sm text-slate-500">Email</label>
+              <input bind:value={editEmail} type="email" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="text-sm text-slate-500">Address</label>
+              <input bind:value={editAddress} type="text" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
           </div>
+          <div class="mt-4 pt-4 border-t border-slate-100">
+            <label class="text-sm text-slate-500">Notes</label>
+            <textarea bind:value={editNotes} rows="3" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+        {:else}
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {#each [['Phone', worker.phone], ['Email', worker.email], ['Address', worker.address]] as [label, value]}
+              <div>
+                <dt class="text-sm text-slate-500">{label}</dt>
+                <dd class="font-medium text-slate-900 mt-0.5">{value || '—'}</dd>
+              </div>
+            {/each}
+          </dl>
+          {#if worker.notes}
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <dt class="text-sm text-slate-500">Notes</dt>
+              <dd class="text-slate-700 mt-1">{worker.notes}</dd>
+            </div>
+          {/if}
         {/if}
       </div>
 

@@ -8,6 +8,18 @@
   const client = $derived(project?.client_id ? dataStore.getClientById(project.client_id) : undefined);
   const workers = $derived(dataStore.getWorkersByProject(projectId));
   const unassigned = $derived(dataStore.getUnassignedWorkers(projectId));
+  const allClients = $derived(dataStore.getAllClients());
+
+  let editing = $state(false);
+  let saving = $state(false);
+  let editName = $state('');
+  let editDescription = $state('');
+  let editStartDate = $state('');
+  let editEndDate = $state('');
+  let editValue = $state('');
+  let editCurrency = $state('');
+  let editStatus = $state<'planned' | 'active' | 'completed'>('planned');
+  let editClientId = $state<number | null>(null);
 
   let showAssignForm = $state(false);
   let assignWorkerId = $state<number | null>(null);
@@ -20,6 +32,44 @@
     planned: 'bg-blue-100 text-blue-700',
     completed: 'bg-slate-100 text-slate-700'
   };
+
+  function startEdit() {
+    if (!project) return;
+    editName = project.name;
+    editDescription = project.description || '';
+    editStartDate = project.start_date || '';
+    editEndDate = project.end_date || '';
+    editValue = project.value != null ? String(project.value) : '';
+    editCurrency = project.currency;
+    editStatus = project.status;
+    editClientId = project.client_id;
+    editing = true;
+  }
+
+  function cancelEdit() {
+    editing = false;
+  }
+
+  async function saveEdit() {
+    saving = true;
+    try {
+      await dataStore.updateProject(projectId, {
+        name: editName,
+        description: editDescription || null,
+        start_date: editStartDate || null,
+        end_date: editEndDate || null,
+        value: editValue ? Number(editValue) : null,
+        currency: editCurrency || 'EUR',
+        status: editStatus,
+        client_id: editClientId
+      });
+      editing = false;
+    } catch (err) {
+      console.error('Failed to update project:', err);
+    } finally {
+      saving = false;
+    }
+  }
 
   async function deleteProject() {
     if (confirm('Delete this project?')) {
@@ -61,27 +111,89 @@
     </a>
     <div class="flex-1">
       <div class="flex items-center gap-3">
-        <h2 class="text-2xl font-bold text-slate-900">{project.name}</h2>
-        <span class="text-xs px-2.5 py-1 rounded-full font-medium {statusColors[project.status]}">{project.status}</span>
+        {#if editing}
+          <input bind:value={editName} class="text-2xl font-bold text-slate-900 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {:else}
+          <h2 class="text-2xl font-bold text-slate-900">{project.name}</h2>
+        {/if}
+        {#if !editing}
+          <span class="text-xs px-2.5 py-1 rounded-full font-medium {statusColors[project.status]}">{project.status}</span>
+        {/if}
       </div>
       <p class="text-slate-500 mt-1">{project.client_name || 'No client'}</p>
     </div>
-    <button onclick={deleteProject} class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+    <div class="flex items-center gap-3">
+      {#if editing}
+        <button onclick={saveEdit} disabled={saving} class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? 'Saving...' : 'Save'}</button>
+        <button onclick={cancelEdit} class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+      {:else}
+        <button onclick={startEdit} class="text-blue-600 hover:text-blue-700 text-sm font-medium">Edit</button>
+        <button onclick={deleteProject} class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+      {/if}
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 class="font-semibold text-slate-900 mb-4">Project Details</h3>
-        {#if project.description}
-          <p class="text-slate-700 mb-4">{project.description}</p>
+        {#if editing}
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-slate-500">Description</label>
+              <textarea bind:value={editDescription} rows="3" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm text-slate-500">Client</label>
+                <select bind:value={editClientId} class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value={null}>No client</option>
+                  {#each allClients as c}
+                    <option value={c.id}>{c.company_name}</option>
+                  {/each}
+                </select>
+              </div>
+              <div>
+                <label class="text-sm text-slate-500">Status</label>
+                <select bind:value={editStatus} class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="planned">Planned</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm text-slate-500">Start Date</label>
+                <input bind:value={editStartDate} type="date" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label class="text-sm text-slate-500">End Date</label>
+                <input bind:value={editEndDate} type="date" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm text-slate-500">Value</label>
+                <input bind:value={editValue} type="number" step="0.01" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label class="text-sm text-slate-500">Currency</label>
+                <input bind:value={editCurrency} type="text" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          </div>
+        {:else}
+          {#if project.description}
+            <p class="text-slate-700 mb-4">{project.description}</p>
+          {/if}
+          <dl class="grid grid-cols-2 gap-4">
+            <div><dt class="text-sm text-slate-500">Start Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.start_date || '—'}</dd></div>
+            <div><dt class="text-sm text-slate-500">End Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.end_date || '—'}</dd></div>
+            <div><dt class="text-sm text-slate-500">Value</dt><dd class="font-medium text-slate-900 mt-0.5">{project.value ? `€${project.value.toLocaleString()}` : '—'}</dd></div>
+            <div><dt class="text-sm text-slate-500">Currency</dt><dd class="font-medium text-slate-900 mt-0.5">{project.currency}</dd></div>
+          </dl>
         {/if}
-        <dl class="grid grid-cols-2 gap-4">
-          <div><dt class="text-sm text-slate-500">Start Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.start_date || '—'}</dd></div>
-          <div><dt class="text-sm text-slate-500">End Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.end_date || '—'}</dd></div>
-          <div><dt class="text-sm text-slate-500">Value</dt><dd class="font-medium text-slate-900 mt-0.5">{project.value ? `€${project.value.toLocaleString()}` : '—'}</dd></div>
-          <div><dt class="text-sm text-slate-500">Currency</dt><dd class="font-medium text-slate-900 mt-0.5">{project.currency}</dd></div>
-        </dl>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-slate-200">
