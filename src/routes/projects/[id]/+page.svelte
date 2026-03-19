@@ -28,9 +28,9 @@
   let assignRate = $state('');
 
   const statusColors: Record<string, string> = {
-    active: 'bg-emerald-100 text-emerald-700',
-    planned: 'bg-blue-100 text-blue-700',
-    completed: 'bg-slate-100 text-slate-700'
+    active: 'bg-success-light text-success',
+    planned: 'bg-info-light text-info',
+    completed: 'bg-surface-hover text-ink-muted'
   };
 
   function startEdit() {
@@ -104,49 +104,49 @@
 </script>
 
 {#if project}
-<div class="space-y-6">
-  <div class="flex items-center gap-4">
-    <a href="/projects" class="text-slate-400 hover:text-slate-600">
+<div class="space-y-8">
+  <!-- Header -->
+  <div class="flex items-start gap-4">
+    <a href="/projects" class="text-ink-muted hover:text-ink transition-colors mt-1">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
     </a>
-    <div class="flex-1">
+    <div class="flex-1 min-w-0">
       <div class="flex items-center gap-3">
         {#if editing}
-          <input bind:value={editName} class="text-2xl font-bold text-slate-900 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input bind:value={editName} class="font-heading text-xl font-700 text-ink border border-border rounded-md px-2 py-1 bg-surface-raised w-full max-w-sm" />
         {:else}
-          <h2 class="text-2xl font-bold text-slate-900">{project.name}</h2>
-        {/if}
-        {#if !editing}
-          <span class="text-xs px-2.5 py-1 rounded-full font-medium {statusColors[project.status]}">{project.status}</span>
+          <h1 class="font-heading text-xl font-700 text-ink tracking-tight">{project.name}</h1>
+          <span class="text-[0.6875rem] px-2 py-0.5 rounded font-medium {statusColors[project.status]}">{project.status}</span>
         {/if}
       </div>
-      <p class="text-slate-500 mt-1">{project.client_name || 'No client'}</p>
+      <p class="text-sm text-ink-muted mt-0.5">{project.client_name || 'No client'}</p>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 shrink-0">
       {#if editing}
-        <button onclick={saveEdit} disabled={saving} class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? 'Saving...' : 'Save'}</button>
-        <button onclick={cancelEdit} class="px-4 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+        <button onclick={saveEdit} disabled={saving} class="bg-primary text-primary-text px-4 py-1.5 rounded-md text-sm font-600 hover:bg-primary-hover disabled:opacity-50 transition-colors">{saving ? 'Saving...' : 'Save'}</button>
+        <button onclick={cancelEdit} class="px-4 py-1.5 rounded-md text-sm font-medium text-ink-secondary border border-border hover:bg-surface-hover transition-colors">Cancel</button>
       {:else}
-        <button onclick={startEdit} class="text-blue-600 hover:text-blue-700 text-sm font-medium">Edit</button>
-        <button onclick={deleteProject} class="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+        <button onclick={startEdit} class="text-primary hover:text-primary-hover text-sm font-600">Edit</button>
+        <button onclick={deleteProject} class="text-danger hover:text-danger/80 text-sm font-600">Delete</button>
       {/if}
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 space-y-6">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-semibold text-slate-900 mb-4">Project Details</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-8">
+      <!-- Project Details -->
+      <section>
+        <h2 class="text-xs font-600 text-ink-muted uppercase tracking-wide mb-3">Project Details</h2>
         {#if editing}
           <div class="space-y-4">
             <div>
-              <label class="text-sm text-slate-500">Description</label>
-              <textarea bind:value={editDescription} rows="3" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+              <label class="block text-sm font-medium text-ink-secondary mb-1.5">Description</label>
+              <textarea bind:value={editDescription} rows="3" class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-sm text-slate-500">Client</label>
-                <select bind:value={editClientId} class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">Client</label>
+                <select bind:value={editClientId} class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink">
                   <option value={null}>No client</option>
                   {#each allClients as c}
                     <option value={c.id}>{c.company_name}</option>
@@ -154,8 +154,8 @@
                 </select>
               </div>
               <div>
-                <label class="text-sm text-slate-500">Status</label>
-                <select bind:value={editStatus} class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">Status</label>
+                <select bind:value={editStatus} class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink">
                   <option value="planned">Planned</option>
                   <option value="active">Active</option>
                   <option value="completed">Completed</option>
@@ -164,53 +164,54 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-sm text-slate-500">Start Date</label>
-                <input bind:value={editStartDate} type="date" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">Start Date</label>
+                <input bind:value={editStartDate} type="date" class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink" />
               </div>
               <div>
-                <label class="text-sm text-slate-500">End Date</label>
-                <input bind:value={editEndDate} type="date" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">End Date</label>
+                <input bind:value={editEndDate} type="date" class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-sm text-slate-500">Value</label>
-                <input bind:value={editValue} type="number" step="0.01" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">Value</label>
+                <input bind:value={editValue} type="number" step="0.01" class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink" />
               </div>
               <div>
-                <label class="text-sm text-slate-500">Currency</label>
-                <input bind:value={editCurrency} type="text" class="w-full mt-0.5 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label class="block text-sm font-medium text-ink-secondary mb-1.5">Currency</label>
+                <input bind:value={editCurrency} type="text" class="w-full border border-border rounded-md px-3 py-2 text-sm bg-surface-raised text-ink" />
               </div>
             </div>
           </div>
         {:else}
           {#if project.description}
-            <p class="text-slate-700 mb-4">{project.description}</p>
+            <p class="text-sm text-ink-secondary leading-relaxed mb-4">{project.description}</p>
           {/if}
-          <dl class="grid grid-cols-2 gap-4">
-            <div><dt class="text-sm text-slate-500">Start Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.start_date || '—'}</dd></div>
-            <div><dt class="text-sm text-slate-500">End Date</dt><dd class="font-medium text-slate-900 mt-0.5">{project.end_date || '—'}</dd></div>
-            <div><dt class="text-sm text-slate-500">Value</dt><dd class="font-medium text-slate-900 mt-0.5">{project.value ? `€${project.value.toLocaleString()}` : '—'}</dd></div>
-            <div><dt class="text-sm text-slate-500">Currency</dt><dd class="font-medium text-slate-900 mt-0.5">{project.currency}</dd></div>
+          <dl class="grid grid-cols-2 gap-x-8 gap-y-4">
+            <div><dt class="text-xs text-ink-muted">Start Date</dt><dd class="text-sm font-medium text-ink mt-0.5 tabular-nums">{project.start_date || '—'}</dd></div>
+            <div><dt class="text-xs text-ink-muted">End Date</dt><dd class="text-sm font-medium text-ink mt-0.5 tabular-nums">{project.end_date || '—'}</dd></div>
+            <div><dt class="text-xs text-ink-muted">Value</dt><dd class="text-sm font-medium text-ink mt-0.5 tabular-nums">{project.value ? `€${project.value.toLocaleString()}` : '—'}</dd></div>
+            <div><dt class="text-xs text-ink-muted">Currency</dt><dd class="text-sm font-medium text-ink mt-0.5">{project.currency}</dd></div>
           </dl>
         {/if}
-      </div>
+      </section>
 
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 class="font-semibold text-slate-900">Team ({workers.length})</h3>
+      <!-- Team -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-600 text-ink-muted uppercase tracking-wide">Team ({workers.length})</h2>
           {#if unassigned.length > 0}
-            <button onclick={() => { showAssignForm = !showAssignForm; assignWorkerId = null; }} class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            <button onclick={() => { showAssignForm = !showAssignForm; assignWorkerId = null; }} class="text-xs text-primary hover:text-primary-hover font-medium">
               {showAssignForm ? 'Cancel' : '+ Assign Worker'}
             </button>
           {/if}
         </div>
 
         {#if showAssignForm}
-          <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
+          <div class="border border-border rounded-lg bg-surface-raised px-4 py-4 mb-3 space-y-3">
             <div>
-              <label class="block text-xs text-slate-500 mb-1">Worker</label>
-              <select bind:value={assignWorkerId} class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs text-ink-muted mb-1">Worker</label>
+              <select bind:value={assignWorkerId} class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink">
                 <option value={null}>Select a worker...</option>
                 {#each unassigned as w}
                   <option value={w.id}>{w.name}</option>
@@ -219,76 +220,79 @@
             </div>
             <div class="grid grid-cols-3 gap-3">
               <div>
-                <label class="block text-xs text-slate-500 mb-1">Role</label>
-                <input type="text" bind:value={assignRole} placeholder="e.g. Developer" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+                <label class="block text-xs text-ink-muted mb-1">Role</label>
+                <input type="text" bind:value={assignRole} placeholder="e.g. Assembler" class="w-full rounded border border-border bg-surface px-2 py-1.5 text-sm text-ink"/>
               </div>
               <div>
-                <label class="block text-xs text-slate-500 mb-1">Hours</label>
-                <input type="number" bind:value={assignHours} placeholder="0" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+                <label class="block text-xs text-ink-muted mb-1">Hours</label>
+                <input type="number" bind:value={assignHours} placeholder="0" class="w-full rounded border border-border bg-surface px-2 py-1.5 text-sm text-ink tabular-nums"/>
               </div>
               <div>
-                <label class="block text-xs text-slate-500 mb-1">€/hour</label>
-                <input type="number" step="0.01" bind:value={assignRate} placeholder="0" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+                <label class="block text-xs text-ink-muted mb-1">€/hour</label>
+                <input type="number" step="0.01" bind:value={assignRate} placeholder="0" class="w-full rounded border border-border bg-surface px-2 py-1.5 text-sm text-ink tabular-nums"/>
               </div>
             </div>
-            <button onclick={assignWorker} disabled={!assignWorkerId} class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">Assign</button>
+            <button onclick={assignWorker} disabled={!assignWorkerId} class="bg-primary text-primary-text px-4 py-1.5 rounded-md text-sm font-600 hover:bg-primary-hover disabled:opacity-50 transition-colors">Assign</button>
           </div>
         {/if}
 
         {#if workers.length === 0}
-          <p class="p-6 text-slate-500 text-sm">No workers assigned yet.</p>
+          <p class="text-sm text-ink-muted py-4">No workers assigned yet.</p>
         {:else}
-          <div class="divide-y divide-slate-100">
-            {#each workers as pw}
-              <div class="px-6 py-3 flex items-center justify-between">
-                <a href="/workers/{pw.worker_id}" class="flex items-center gap-3 hover:opacity-80">
-                  <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-xs">
+          <div class="border border-border rounded-lg overflow-hidden bg-surface-raised">
+            {#each workers as pw, i}
+              <div class="flex items-center justify-between px-4 py-3 {i > 0 ? 'border-t border-border' : ''}">
+                <a href="/workers/{pw.worker_id}" class="flex items-center gap-3 hover:opacity-80 min-w-0">
+                  <div class="w-7 h-7 bg-primary-light text-primary rounded flex items-center justify-center font-600 text-xs shrink-0">
                     {pw.worker_name?.split(' ').map((n: string) => n[0]).join('')}
                   </div>
-                  <div>
-                    <p class="font-medium text-slate-900">{pw.worker_name}</p>
-                    <p class="text-xs text-slate-500">{pw.role || 'No role'}</p>
+                  <div class="min-w-0">
+                    <p class="font-medium text-ink text-sm truncate">{pw.worker_name}</p>
+                    <p class="text-xs text-ink-muted">{pw.role || 'No role'}</p>
                   </div>
                 </a>
-                <div class="flex items-center gap-4">
-                  <div class="text-right text-sm">
-                    <p class="font-medium text-slate-900">{pw.allocated_hours || 0}h</p>
-                    <p class="text-xs text-slate-500">€{pw.hourly_rate || 0}/h</p>
+                <div class="flex items-center gap-4 shrink-0">
+                  <div class="text-right text-sm tabular-nums">
+                    <p class="font-medium text-ink">{pw.allocated_hours || 0}h</p>
+                    <p class="text-xs text-ink-muted">€{pw.hourly_rate || 0}/h</p>
                   </div>
-                  <button onclick={() => removeWorker(pw.worker_id)} class="text-red-400 hover:text-red-600 text-xs" title="Remove">✕</button>
+                  <button onclick={() => removeWorker(pw.worker_id)} class="text-ink-muted hover:text-danger text-xs transition-colors" title="Remove">✕</button>
                 </div>
               </div>
             {/each}
           </div>
         {/if}
-      </div>
+      </section>
     </div>
 
+    <!-- Sidebar -->
     <div class="space-y-6">
       {#if client}
-      <a href="/clients/{client.id}" class="block bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-        <h3 class="font-semibold text-slate-900 mb-3">🏢 Client</h3>
-        <p class="font-medium text-blue-600">{client.company_name}</p>
-        {#if client.contact_person}<p class="text-sm text-slate-500 mt-1">{client.contact_person}</p>{/if}
-        {#if client.contact_email}<p class="text-sm text-slate-500">{client.contact_email}</p>{/if}
-        {#if client.contact_phone}<p class="text-sm text-slate-500">{client.contact_phone}</p>{/if}
-      </a>
+        <div>
+          <h2 class="text-xs font-600 text-ink-muted uppercase tracking-wide mb-3">Client</h2>
+          <a href="/clients/{client.id}" class="block border border-border rounded-lg bg-surface-raised px-4 py-4 hover:bg-surface-hover transition-colors duration-100">
+            <p class="font-medium text-primary text-sm">{client.company_name}</p>
+            {#if client.contact_person}<p class="text-xs text-ink-muted mt-1">{client.contact_person}</p>{/if}
+            {#if client.contact_email}<p class="text-xs text-ink-muted">{client.contact_email}</p>{/if}
+            {#if client.contact_phone}<p class="text-xs text-ink-muted tabular-nums">{client.contact_phone}</p>{/if}
+          </a>
+        </div>
       {/if}
 
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-semibold text-slate-900 mb-3">Summary</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between">
-            <span class="text-sm text-slate-500">Team Size</span>
-            <span class="font-semibold text-slate-900">{workers.length}</span>
+      <div>
+        <h2 class="text-xs font-600 text-ink-muted uppercase tracking-wide mb-3">Summary</h2>
+        <div class="border border-border rounded-lg bg-surface-raised px-4 py-4 space-y-3">
+          <div class="flex justify-between items-baseline">
+            <span class="text-sm text-ink-secondary">Team Size</span>
+            <span class="font-heading font-700 text-ink tabular-nums">{workers.length}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-sm text-slate-500">Total Hours</span>
-            <span class="font-semibold text-slate-900">{workers.reduce((s: number, w: any) => s + (w.allocated_hours || 0), 0)}</span>
+          <div class="flex justify-between items-baseline">
+            <span class="text-sm text-ink-secondary">Total Hours</span>
+            <span class="font-heading font-700 text-ink tabular-nums">{workers.reduce((s: number, w: any) => s + (w.allocated_hours || 0), 0)}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-sm text-slate-500">Labor Cost</span>
-            <span class="font-semibold text-slate-900">€{workers.reduce((s: number, w: any) => s + (w.allocated_hours || 0) * (w.hourly_rate || 0), 0).toLocaleString()}</span>
+          <div class="flex justify-between items-baseline">
+            <span class="text-sm text-ink-secondary">Labor Cost</span>
+            <span class="font-heading font-700 text-ink tabular-nums">€{workers.reduce((s: number, w: any) => s + (w.allocated_hours || 0) * (w.hourly_rate || 0), 0).toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -296,5 +300,5 @@
   </div>
 </div>
 {:else}
-  <p class="text-slate-500">Project not found.</p>
+  <p class="text-ink-muted">Project not found.</p>
 {/if}
